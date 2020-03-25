@@ -1,0 +1,146 @@
+node Main(x:real) returns(z:real);
+let
+    --z = Previous(x);
+    --z = Since_Interval<<0,2>>(x,y);
+    --z = Once_Interval<<0,2>>(x);
+    --z = Always_Interval<<0,2>>(x);
+    --z = Always_Inf(x);
+    z = Once_Inf(x);
+tel
+
+
+-- Quantatative MTL Operators
+
+node Or(x,y:real) returns(z:real);
+let
+    z = Max_2(x,y);
+tel
+
+
+node And(x,y:real) returns(z:real);
+let
+    z = Min_2(x,y);
+tel
+
+
+node Not(x:real) returns(not_x:real);
+let
+    not_x = -x;
+tel
+
+-- Since with past interval
+node Since_Interval<<const l:int; const u:int>>(x,y:real) returns (z:real);
+let
+    assert(l>=0);
+    assert(u>0);
+
+   z = Since_Recurse<<l,u,0>>(x, y);
+
+tel
+
+-- Since from [Fainekos 2009]
+node Since_Inf(x,y:real) returns(z:real);
+var tmp_1, pre_z:real;
+let
+    pre_z = -999.0 -> pre z;
+    tmp_1 = Min_2(y,pre_z);
+    z = Max_2(x,tmp_1);
+tel
+
+node Previous(x:real) returns (z:real);
+let
+    z = Since_Interval<<1,1>>(x,99.0);
+    --z = delay<<1>>(x);
+tel
+
+node Once_Interval<<const l:int; const u:int>>(x:real) returns(z:real);
+let
+    z = Since_Interval<<l,u>>(x, 99.0);
+tel
+
+node Always_Interval<<const l:int; const u:int>>(x:real) returns(z:real);
+let
+    z = Not(Once_Interval<<l,u>>(Not(x)));
+tel
+
+node Always_Inf(x:real) returns(z:real);
+let
+    z = Min(x);
+tel
+
+node Once_Inf(x:real) returns(z:real);
+let
+    z = Max(x);
+tel
+
+
+
+
+-- Involved Computations --
+
+-- Delay stream by n steps
+node Delay<<const n: int>>(x:real) returns (z:real);
+let
+    assert(n >= 0);
+
+    z = with (n=0) then  x
+                   else -99.0 -> pre Delay<<n-1>>(x);
+tel
+
+node Since_Recurse<<const l:int; const u:int; const n:int>>(x,y:real) returns(z:real);
+var x_delay, x_j, min_k, min_j:real;
+let 
+    assert(u-l>=0); 
+
+    x_delay = if(Delay<<l>>(x) = -99.0) then x else Delay<<l>>(x);
+    x_j = Delay<<n>>(x_delay);
+    min_k = if(Sliding_Min<<l+1>>(y) = -99.0) then y else Sliding_Min<<l+1>>(y); 
+    min_j = Min_2(x_j, min_k);
+    z = with (n=u-l) then min_j
+                   else Max_2(min_j, Since_Recurse<<l,u,n+1>>(x,y));
+            
+
+tel
+
+node Sliding_Min<<const n:int>>(x:real) returns (z:real);
+var x_n:real;
+let
+
+    assert(n>=0);
+
+    x_n = Delay<<n>>(x);
+    z = with(n=0) then x
+                  else Min_2(x_n,Sliding_Min<<n-1>>(x_n)); 
+
+tel
+
+
+
+-- Simple Computations --
+
+-- Max of a stream
+node Max(x:real) returns(max:real);
+let
+    max = x-> if(x > pre max) then x else pre max;
+tel
+
+-- Min of a stream
+node Min(x:real) returns(min:real);
+let
+    min = x -> if(x < pre min) then x else pre min;
+tel
+
+-- Max between two streams 
+node Max_2(x,y: real) returns(max:real);
+let
+    max = if(x>y) then x else y;
+tel
+
+-- Min between two streams
+node Min_2(x,y: real) returns(min:real);
+let
+    min = if(x>y) then y else x;
+tel
+
+
+
