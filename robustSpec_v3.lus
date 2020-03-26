@@ -1,11 +1,17 @@
-node Main(x:real) returns(z:real);
+const TRUE_r  :real = 9999.0;
+const FALSE_r :real = -9999.0;
+
+
+node Main(x,y:real) returns(z:real);
 let
+    --z = Delay<<2>>(x);
+    --z = Sliding_Min<<2>>(x);
     --z = Previous(x);
     --z = Since_Interval<<0,2>>(x,y);
-    --z = Once_Interval<<0,2>>(x);
+    z = Once_Interval<<0,2>>(x);
     --z = Always_Interval<<0,2>>(x);
     --z = Always_Inf(x);
-    z = Once_Inf(x);
+    --z = Once_Inf(x);
 tel
 
 
@@ -42,7 +48,7 @@ tel
 node Since_Inf(x,y:real) returns(z:real);
 var tmp_1, pre_z:real;
 let
-    pre_z = -999.0 -> pre z;
+    pre_z = FALSE_r -> pre z;
     tmp_1 = Min_2(y,pre_z);
     z = Max_2(x,tmp_1);
 tel
@@ -55,12 +61,12 @@ tel
 
 node Once_Interval<<const l:int; const u:int>>(x:real) returns(z:real);
 let
-    z = Since_Interval<<l,u>>(x, 99.0);
+    z = Since_Interval<<l,u>>(x, TRUE_r);
 tel
 
 node Always_Interval<<const l:int; const u:int>>(x:real) returns(z:real);
 let
-    z = Not(Once_Interval<<l,u>>(Not(x)));
+    z = Not( Once_Interval<<l,u>>(Not(x)) );
 tel
 
 node Always_Inf(x:real) returns(z:real);
@@ -78,43 +84,35 @@ tel
 
 -- Involved Computations --
 
--- Delay stream by n steps
-node Delay<<const n: int>>(x:real) returns (z:real);
+-- Delay n steps
+-- Note: The delay bottoms out at the first value of x
+node Delay<<const n:int>>(x:real) returns (z:real);
 let
-    assert(n >= 0);
 
-    z = with (n=0) then  x
-                   else -99.0 -> pre Delay<<n-1>>(x);
+    z = with (n<=0) then  x
+                   else x -> pre Delay<<n-1>>(x);
 tel
 
+
 node Since_Recurse<<const l:int; const u:int; const n:int>>(x,y:real) returns(z:real);
-var x_delay, x_j, min_k, min_j:real;
+var x_delay, x_n, min_m, min_n:real;
 let 
     assert(u-l>=0); 
 
-    x_delay = if(Delay<<l>>(x) = -99.0) then BackSeek<<l-1>(x) else Delay<<l>>(x);
-    x_j = Delay<<n>>(x_delay);
-    min_k = if(Sliding_Min<<l-1>>(y) = -99.0) then  else Sliding_Min<<l-1>>(y); 
-    min_j = Min_2(x_j, min_k);
-    z = with (n=u-l) then min_j
-                   else Max_2(min_j, Since_Recurse<<l,u,n+1>>(x,y));
+    x_delay = Delay<<l>>(x); 
+    x_n = Delay<<n>>(x_delay);
+    min_m = Sliding_Min<<l-1>>(y); 
+    min_n = Min_2(x_n, min_m);
+    z = with (n=u-l) then min_n
+                     else Max_2(min_n, Since_Recurse<<l,u,n+1>>(x,y));
             
-tel
-
-node BackSeek<<const n:int>>(x:real) returns(z:real);
-let
-    z = with(n = 0) then x 
-        else if(Delay<<n>>(x) == -99.0) then BackSeek<<n-1>>(x) else x
 tel
 
 node Sliding_Min<<const n:int>>(x:real) returns (z:real);
 var x_n:real;
-let
-
-    assert(n>=0);
-
+let   
     x_n = Delay<<n>>(x);
-    z = with(n=0) then x
+    z = with(n<=0) then x
                   else Min_2(x_n,Sliding_Min<<n-1>>(x_n)); 
 
 tel

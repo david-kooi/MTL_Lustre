@@ -1,4 +1,0 @@
-node main(x,y:real) returns(z:real); 
-let
-    z = if(x > y) then x else y;
-tel
