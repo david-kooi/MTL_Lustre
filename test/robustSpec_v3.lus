@@ -4,11 +4,11 @@ const FALSE_r :real = -9999.0;
 
 node Main(x,y:real) returns(z:real);
 let
-    --z = Delay<<2>>(x);
-    --z = Sliding_Min<<2>>(x);
+    --z = Delay<<5>>(x);
+    --z = Sliding_Min<<5>>(x);
     --z = Previous(x);
-    --z = Since_Interval<<0,2>>(x,y);
-    z = Once_Interval<<0,2>>(x);
+    z = Since_Interval<<0,5>>(x,y);
+    --z = Once_Interval<<0,2>>(x);
     --z = Always_Interval<<0,2>>(x);
     --z = Always_Inf(x);
     --z = Once_Inf(x);
@@ -94,17 +94,16 @@ let
 tel
 
 
-node Since_Recurse<<const l:int; const u:int; const n:int>>(x,y:real) returns(z:real);
-var x_delay, x_n, min_m, min_n:real;
+node Since_Recurse<<const l:int; const u:int; const q:int>>(x,y:real) returns(z:real);
+var x_n, min_m, min_n:real;
 let 
     assert(u-l>=0); 
 
-    x_delay = Delay<<l>>(x); 
-    x_n = Delay<<n>>(x_delay);
-    min_m = Sliding_Min<<l-1>>(y); 
+    x_n = Delay<<l+q+1>>(x); 
+    min_m = Sliding_Min<<l+q>>(y); 
     min_n = Min_2(x_n, min_m);
-    z = with (n=u-l) then min_n
-                     else Max_2(min_n, Since_Recurse<<l,u,n+1>>(x,y));
+    z = with (q=u-l-1) then min_n
+                     else Max_2(min_n, Since_Recurse<<l,u,q+1>>(x,y));
             
 tel
 
@@ -112,8 +111,8 @@ node Sliding_Min<<const n:int>>(x:real) returns (z:real);
 var x_n:real;
 let   
     x_n = Delay<<n>>(x);
-    z = with(n<=0) then x
-                  else Min_2(x_n,Sliding_Min<<n-1>>(x_n)); 
+    z = with(n<=0) then x_n
+                  else Min_2(x_n,Sliding_Min<<n-1>>(x)); 
 
 tel
 
