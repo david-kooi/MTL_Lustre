@@ -1,0 +1,73 @@
+-- y S[l,u] x with past interval
+node Since_Interval<<const l:int; const u:int>>(x,y:real) returns (z:real);
+let
+    assert(l>=0);
+    assert(u>0);
+
+   z = Since_Recurse<<l,u,0>>(x, y);
+
+tel
+
+node Since_Recurse<<const l:int; const u:int; const q:int>>(x,y:real) returns(z:real);
+var x_n, min_m, min_n:real;
+let 
+    assert(u-l>=0); 
+
+    x_n = Delay<<l+q>>(x); 
+    min_m = Sliding_Min<<l+q-1>>(y); 
+    min_n = Min_2(x_n, min_m);
+    z = with (q=u-l) then min_n
+                     else Max_2(min_n, Since_Recurse<<l,u,q+1>>(x,y));
+            
+tel
+
+
+-- Since from [Fainekos 2009]
+node Since_Inf(x,y:real) returns(z:real);
+var tmp_1, pre_z:real;
+let
+    pre_z = FALSE_r -> pre z;
+    tmp_1 = Min_2(y,pre_z);
+    z = Max_2(x,tmp_1);
+tel
+
+
+
+node Or(x,y:real) returns(z:real);
+let
+    z = Max_2(x,y);
+tel
+
+node And(x,y:real) returns(z:real);
+let
+    z = Min_2(x,y);
+tel
+
+node Not(x:real) returns(not_x:real);
+let
+    not_x = -x;
+tel
+
+
+
+node Sliding_Min<<const n:int>>(x:real) returns (z:real);
+var x_n:real;
+let   
+    x_n = Delay<<n>>(x);
+    z = with(n<=0) then x_n
+                  else Min_2(x_n,Sliding_Min<<n-1>>(x)); 
+
+tel
+
+
+-- Delay n steps
+node Delay<<const n:int>>(x:real) returns (z:real);
+let
+
+    z = with (n<=0) then  x
+                   else x -> pre Delay<<n-1>>(x);
+tel
+
+
+
+

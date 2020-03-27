@@ -2,12 +2,22 @@ const TRUE_r  :real = 9999.0;
 const FALSE_r :real = -9999.0;
 
 
-node Main(x,y:real) returns(z:real);
+
+node Main(trigger:bool; x:real) returns(z:real);
+let
+   
+    -- trigger implies that x is greater than 0 within [0,5] steps
+    --z = Implies(Once_Interval<<0,5>>(BoolToReal(trigger)), Once_Interval<<0,5>>(x)); 
+    z = Sliding_Min<<5>>(x);
+
+tel
+
+node MainTest(x,y:real) returns(z:real);
 let
     --z = Delay<<5>>(x);
     --z = Sliding_Min<<5>>(x);
     --z = Previous(x);
-    z = Since_Interval<<0,5>>(x,y);
+    --z = Since_Interval<<0,5>>(x,y);
     --z = Once_Interval<<0,2>>(x);
     --z = Always_Interval<<0,2>>(x);
     --z = Always_Inf(x);
@@ -15,7 +25,20 @@ let
 tel
 
 
+-- Boolean Translation
+node BoolToReal(x:bool) returns (z:real);
+let
+    z = if(x) then TRUE_r else FALSE_r;
+tel
+
+
 -- Quantatative MTL Operators
+
+-- x -> y = not x or y
+node Implies(x,y:real) returns(z:real);
+let
+    z = Or(Not(x), y); 
+tel
 
 node Or(x,y:real) returns(z:real);
 let
@@ -34,7 +57,7 @@ let
     not_x = -x;
 tel
 
--- Since with past interval
+-- y S[l,u] x with past interval
 node Since_Interval<<const l:int; const u:int>>(x,y:real) returns (z:real);
 let
     assert(l>=0);
@@ -44,7 +67,8 @@ let
 
 tel
 
--- Since from [Fainekos 2009]
+-- y S[0,inf] x 
+-- From [Dokhanchi, Fainekos 2014]
 node Since_Inf(x,y:real) returns(z:real);
 var tmp_1, pre_z:real;
 let
@@ -99,6 +123,20 @@ var x_n, min_m, min_n:real;
 let 
     assert(u-l>=0); 
 
+    x_n = Delay<<l+q>>(x); 
+    min_m = Sliding_Min<<l+q-1>>(y); 
+    min_n = Min_2(x_n, min_m);
+    z = with (q=u-l) then min_n
+                     else Max_2(min_n, Since_Recurse<<l,u,q+1>>(x,y));
+            
+tel
+
+-- Non Inclusive Since
+node Since_Recurse_noInc<<const l:int; const u:int; const q:int>>(x,y:real) returns(z:real);
+var x_n, min_m, min_n:real;
+let 
+    assert(u-l>=0); 
+
     x_n = Delay<<l+q+1>>(x); 
     min_m = Sliding_Min<<l+q>>(y); 
     min_n = Min_2(x_n, min_m);
@@ -106,6 +144,8 @@ let
                      else Max_2(min_n, Since_Recurse<<l,u,q+1>>(x,y));
             
 tel
+
+
 
 node Sliding_Min<<const n:int>>(x:real) returns (z:real);
 var x_n:real;
