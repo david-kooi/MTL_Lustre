@@ -1,60 +1,16 @@
-
-
 const TRUE_r  :real = 9999.0;
 const FALSE_r :real = -9999.0;
 
 
 
---type State_idx = enum {theta, d_theta, set_point};
-const theta:int = 0; 
-const d_theta:int = 1;
-const set_point:int = 2;
-
-const n: int = 3; -- State Size
-const AP_size: int = 2; 
-const Phi_size: int = 3;
-
-type SamplePoint         = {t : real; s : real^n};
-type PerformancePoint    = real^Phi_size;
-type PerformancePoint_AP = real^AP_size;
-
--- There is a new set point
-node f_AP_0(SP : SamplePoint) returns(mu: real);
-let 
-    mu = 0.1 - Abs(SP.s[set_point] - Previous(SP.s[set_point])); 
-tel
-
--- The error is within 10% of the setpoint
-node f_AP_1(SP : SamplePoint) returns(mu: real);
+node Main(trigger:bool; x:real) returns(z:real);
 let
-    mu = 0.1 - (Abs(SP.s[theta] - SP.s[set_point]) / SP.s[set_point]); 
+   
+    -- trigger implies that x is greater than 0 within [0,5] steps
+    --z = Implies(Once_Interval<<0,5>>(BoolToReal(trigger)), Once_Interval<<0,5>>(x)); 
+    z = Sliding_Min<<5>>(x);
+
 tel
-
-node ComputeRho_AP(SP : SamplePoint) returns(Rho_AP:PerformancePoint_AP); 
-let
-    Rho_AP[0] = f_AP_0(SP);
-    Rho_AP[1] = f_AP_1(SP);
-tel
-
-node ComputeRho_Phi(Rho_AP : PerformancePoint_AP) returns(Rho:PerformancePoint);
-let
-   --Rho[0..AP_size-1] = Rho_AP; 
-    Rho[0] = Rho_AP[0];
-    Rho[1] = Rho_AP[1]; 
-   Rho[AP_size] = Implies(Once_Interval<<0,15>>(Rho_AP[0]),
-                          Once_Interval<<0,15>>(Rho_AP[1]));
-tel
-
-
-
-node Main(SP: SamplePoint) returns(Rho: PerformancePoint); 
-var Rho_AP: PerformancePoint_AP;
-let 
-    Rho_AP = ComputeRho_AP(SP); 
-    Rho    = ComputeRho_Phi(Rho_AP); 
-tel
-
-
 
 node MainTest(x,y:real) returns(z:real);
 let
@@ -100,6 +56,13 @@ node Not(x:real) returns(not_x:real);
 let
     not_x = -x;
 tel
+
+ 
+node Since_Interval_0_5_v4_wrapper(x,y:real) returns(z:real);
+let 
+    z = Since_Interval<<0,5>>(x,y);
+tel
+
 
 -- y S[l,u] x with past interval
 node Since_Interval<<const l:int; const u:int>>(x,y:real) returns (z:real);
@@ -203,10 +166,6 @@ tel
 
 
 -- Simple Computations --
-node Abs(x:real) returns(abs_x:real);
-let
-    abs_x = if(x > 0.0) then x else -x;
-tel
 
 -- Max of a stream
 node Max(x:real) returns(max:real);
