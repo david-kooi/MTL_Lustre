@@ -1,5 +1,10 @@
+import os
+import sys
 import yaml
 from Cheetah.Template import Template
+
+TOOL_ROOT = "/home/dkooi/Workspace/STL_Lustre"
+
 
 class Proposition(object):
     def __init__(self, p_data, idx, p_name):
@@ -7,6 +12,7 @@ class Proposition(object):
         self.idx  = idx
         self.text = p_data["text"]
         self.f    = p_data["f"] 
+
 
 class Formula(object):
     def __init__(self, f_name, f_dict):
@@ -20,8 +26,16 @@ class Specification(object):
         self.states = states
         self.AP = AP
         self.formulas = formulas 
+
         self.__clean_formulas()
+        self.__clean_prop()
     
+    def __clean_prop(self):
+        for prop in self.AP.values():
+            for state in self.states:
+                if state.name in prop.f:
+                    prop.f = prop.f.replace(state.name, "SP.s[{}]".format(state.name))
+
     def __clean_formulas(self):
         for formula in self.formulas.values():
             for p_name in self.AP.keys():
@@ -71,7 +85,8 @@ def get_states(spec_obj):
 
 
 if __name__ == "__main__":
-    with open("spec.yaml", "r") as f:
+    filename = sys.argv[1]
+    with open(filename, "r") as f:
         spec_obj = yaml.load(f, Loader=yaml.FullLoader)
 
     # Collect information from YAML
@@ -81,7 +96,7 @@ if __name__ == "__main__":
     spec = get_specification(states, AP, formulas, spec_obj)
 
     # Open Cheetah template for writing
-    with open("spec_template_lv6.tmpl", "r") as f:
+    with open(os.path.join(TOOL_ROOT,"templates/spec_template_lv6.tmpl"), "r") as f:
         tmpl = Template(f.read(),searchList=spec.getSearchList()) 
 
         with open("spec_output.lus","w") as f2:

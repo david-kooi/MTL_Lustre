@@ -1,60 +1,5 @@
-
-
 const TRUE_r  :real = 9999.0;
 const FALSE_r :real = -9999.0;
-
-
-
---type State_idx = enum {theta, d_theta, set_point};
-const theta:int = 0; 
-const d_theta:int = 1;
-const set_point:int = 2;
-
-const n: int = 3; -- State Size
-const AP_size: int = 2; 
-const Phi_size: int = 3;
-
-type SamplePoint         = {t : real; s : real^n};
-type PerformancePoint    = real^Phi_size;
-type PerformancePoint_AP = real^AP_size;
-
--- There is a new set point
-node f_AP_0(SP : SamplePoint) returns(mu: real);
-let 
-    mu = Abs(SP.s[set_point] - Previous(SP.s[set_point]))-0.1; 
-tel
-
--- The error is within 10% of the setpoint
-node f_AP_1(SP : SamplePoint) returns(mu: real);
-let
-    mu = 0.1 - (Abs(SP.s[theta] - SP.s[set_point]) / SP.s[set_point]); 
-tel
-
-node ComputeRho_AP(SP : SamplePoint) returns(Rho_AP:PerformancePoint_AP); 
-let
-    Rho_AP[0] = f_AP_0(SP);
-    Rho_AP[1] = f_AP_1(SP);
-tel
-
-node ComputeRho_Phi(Rho_AP : PerformancePoint_AP) returns(Rho:PerformancePoint);
-let
-   --Rho[0..AP_size-1] = Rho_AP; 
-    Rho[0] = Rho_AP[0];
-    Rho[1] = Rho_AP[1]; 
-    Rho[AP_size] = Once_Interval<<0,5>>(Rho[1]);--Implies(Once_Interval<<0,15>>(Rho_AP[0]),
-                   --       Once_Interval<<0,15>>(Rho_AP[1]));
-tel
-
-
-
-node Main(SP: SamplePoint) returns(Rho: PerformancePoint); 
-var Rho_AP: PerformancePoint_AP;
-let 
-    Rho_AP = ComputeRho_AP(SP); 
-    Rho    = ComputeRho_Phi(Rho_AP); 
-tel
-
-
 
 node MainTest(x,y:real) returns(z:real);
 let
@@ -62,7 +7,6 @@ let
     --z = Sliding_Min<<5>>(x);
     --z = Previous(x);
     --z = Since_Interval<<0,5>>(x,y);
-    --z = Once_Interval<<0,2>>(x);
     --z = Always_Interval<<0,2>>(x);
     --z = Always_Inf(x);
     --z = Once_Inf(x);

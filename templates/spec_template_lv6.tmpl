@@ -1,9 +1,7 @@
-const TRUE_r  :real = 9999.0;
-const FALSE_r :real = -9999.0;
-
+-- "Enum" of states
 #for $state in $state_list 
-const $state.name:$state.datatype = $state.idx;
-#end for
+const $state.name : int  = $state.idx;
+#end for 
 
 const n: int = $len($state_list); -- State Size
 const AP_size: int = 2; 
