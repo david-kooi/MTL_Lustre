@@ -1,0 +1,60 @@
+const TRUE_r  :real = 9999.0;
+const FALSE_r :real = -9999.0;
+
+const theta:real = 0;
+const d_theta:real = 1;
+const SP:real = 2;
+
+const n: int = 3; -- State Size
+const AP_size: int = 2; 
+const Phi_size: int = 3;
+
+type SamplePoint         = {t : real; s : real^n};
+type PerformancePoint    = real^Phi_size;
+type PerformancePoint_AP = real^AP_size;
+
+
+node Main(SP: SamplePoint) returns(Rho: PerformancePoint); 
+var Rho_AP: PerformancePoint_AP;
+let 
+    Rho_AP = ComputeRho_AP(SP); 
+    Rho    = ComputeRho_Phi(Rho_AP); 
+tel
+
+
+node ComputeRho_Phi(Rho_AP : PerformancePoint_AP) returns(Rho:PerformancePoint);
+let
+
+    Rho[0] = Rho_AP[0]; 
+    Rho[1] = Rho_AP[1]; 
+    
+    -- New SP impies reaching 10% of SP within 5s 
+    Rho[2]  = Implies(Once_Interval<<0,5>>(p_1), Once_Interval<<0,5>>(p_2));
+
+tel
+
+
+node ComputeRho_AP(SP : SamplePoint) returns(Rho_AP:PerformancePoint_AP); 
+let
+    Rho_AP[0] = f_0(SP); 
+    Rho_AP[1] = f_1(SP); 
+tel
+
+
+-----------------------------
+-- Quantifiers for the APs --
+-----------------------------
+
+-- Error is within 10% of setpoint
+node f_0(SP: SamplePoint) returns(mu: real);
+let
+    mu = 0.1 - Abs((theta - SP)) / SP;    
+tel
+-- There is a new set point
+node f_1(SP: SamplePoint) returns(mu: real);
+let
+    mu = Abs(SP - Previous(SP)) - 0.1;    
+tel
+
+
+

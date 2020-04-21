@@ -74,7 +74,7 @@ if __name__ == "__main__":
         with open("spec_output.lus","w") as f2:
             f2.write(str(tmpl)) 
 
-
+        print(tmpl)
  
 
 
