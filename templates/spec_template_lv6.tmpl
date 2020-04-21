@@ -25,14 +25,13 @@ tel
 node ComputeRho_Phi(Rho_AP : PerformancePoint_AP) returns(Rho:PerformancePoint);
 let
 
-    #for $i, $proposition in $enumerate($AP.values())
-    Rho[$i] = Rho_AP[$i]; 
+    #for $prop in $AP.values()
+    Rho[$prop.idx] = Rho_AP[$prop.idx]; -- $prop.p_name: $prop.text 
     #end for
     
     #for $i, $formula in $enumerate($formulas.values()) 
     #set $k = $i + $len($AP.values())
-    -- $formula.text 
-    ###set $mod_form = $formula.formula.replace()
+    -- $formula.text  
     Rho[$k]  = $formula.formula;
     #end for
 
@@ -41,8 +40,8 @@ tel
 
 node ComputeRho_AP(SP : SamplePoint) returns(Rho_AP:PerformancePoint_AP); 
 let
-    #for $i, $proposition in $enumerate($AP.values())
-    Rho_AP[$i] = f_${i}(SP); 
+    #for $prop in $AP.values()
+    Rho_AP[$prop.idx] = f_${prop.idx}(SP); -- $prop.p_name 
     #end for
 tel
 
@@ -51,11 +50,11 @@ tel
 -- Quantifiers for the APs --
 -----------------------------
 
-#for $i, $proposition in $enumerate($AP.values())
--- $proposition.text
-node f_${i}(SP: SamplePoint) returns(mu: real);
+#for $prop in $AP.values()
+-- $prop.text
+node f_${prop.idx}(SP: SamplePoint) returns(mu: real);
 let
-    mu = ${proposition.f};    
+    mu = ${prop.f};    
 tel
 #end for
 

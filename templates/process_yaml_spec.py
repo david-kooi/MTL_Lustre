@@ -2,7 +2,9 @@ import yaml
 from Cheetah.Template import Template
 
 class Proposition(object):
-    def __init__(self, p_data):
+    def __init__(self, p_data, idx, p_name):
+        self.p_name = p_name
+        self.idx  = idx
         self.text = p_data["text"]
         self.f    = p_data["f"] 
 
@@ -18,9 +20,20 @@ class Specification(object):
         self.states = states
         self.AP = AP
         self.formulas = formulas 
+        self.__clean_formulas()
+    
+    def __clean_formulas(self):
+        for formula in self.formulas.values():
+            for p_name in self.AP.keys():
+                prop = self.AP[p_name]
+                if p_name in formula.formula:
+                    formula.formula  = formula.formula.replace(p_name,
+                    "Rho[{}]".format(prop.idx)) 
+
     def getSearchList(self):
         return [{"state_list":self.states,"AP":self.AP,"formulas":self.formulas}]
 
+    
 class State(object):
     def __init__(self, name, datatype, idx):
         self.name = name
@@ -44,8 +57,8 @@ def get_specification(states, AP, formulas, spec_obj):
 def get_propositions(spec_obj):
     AP = {}
     props = spec_obj["STL_Spec"]['AP']
-    for p_name in props:
-        AP[p_name] = Proposition(spec_obj["propositions"][p_name])
+    for idx, p_name in enumerate(props):
+        AP[p_name] = Proposition(spec_obj["propositions"][p_name], idx, p_name)
     return AP
 
 def get_states(spec_obj):
