@@ -1,0 +1,20 @@
+STL_Spec:
+    step: 100 # ms
+    states: [theta, d_theta, SP]
+    AP: [p_1,p_2]
+    TopPhi: phi_0
+
+propositions:
+    p_1:
+        text: "Error is within 10% of setpoint"
+        f: "0.1 - Abs((theta - SP)) / SP" 
+    p_2:
+        text: "There is a new set point"
+        f: "Abs(SP - Previous(SP)) - 0.1"
+
+
+formulas: 
+    phi_0:
+        text: "New SP impies reaching 10% of SP within 5s"
+        formula: "Implies(Once_Interval<<0,5>>(p_1), Once_Interval<<0,5>>(p_2))" 
+              

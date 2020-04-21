@@ -1,0 +1,63 @@
+const TRUE_r  :real = 9999.0;
+const FALSE_r :real = -9999.0;
+
+#for $state in $state_list 
+const $state.name:$state.datatype = $state.idx;
+#end for
+
+const n: int = $len($state_list); -- State Size
+const AP_size: int = 2; 
+const Phi_size: int = 3;
+
+type SamplePoint         = {t : real; s : real^n};
+type PerformancePoint    = real^Phi_size;
+type PerformancePoint_AP = real^AP_size;
+
+
+node Main(SP: SamplePoint) returns(Rho: PerformancePoint); 
+var Rho_AP: PerformancePoint_AP;
+let 
+    Rho_AP = ComputeRho_AP(SP); 
+    Rho    = ComputeRho_Phi(Rho_AP); 
+tel
+
+
+node ComputeRho_Phi(Rho_AP : PerformancePoint_AP) returns(Rho:PerformancePoint);
+let
+
+    #for $i, $proposition in $enumerate($AP.values())
+    Rho[$i] = Rho_AP[$i]; 
+    #end for
+    
+    #for $i, $formula in $enumerate($formulas.values()) 
+    #set $k = $i + $len($AP.values())
+    -- $formula.text 
+    #set $mod_form = $formula.formula.replace()
+    Rho[$k]  = $formula.formula;
+    #end for
+
+tel
+
+
+node ComputeRho_AP(SP : SamplePoint) returns(Rho_AP:PerformancePoint_AP); 
+let
+    #for $i, $proposition in $enumerate($AP.values())
+    Rho_AP[$i] = f_${i}(SP); 
+    #end for
+tel
+
+
+-----------------------------
+-- Quantifiers for the APs --
+-----------------------------
+
+#for $i, $proposition in $enumerate($AP.values())
+-- $proposition.text
+node f_${i}(SP: SamplePoint) returns(mu: real);
+let
+    mu = ${proposition.f};    
+tel
+#end for
+
+
+

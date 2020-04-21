@@ -1,0 +1,4 @@
+# Rdbg Version "1.175" ("b3a56a8")
+# sut: lv6 robustSpec_v6.lus -n Main --expand-io-type (with lv6 Version master.737 (2727a7744111c84f7984634d2bd3ad6f7c6c7ff9))
+#inputs "SP_t":real "SP_s_0":real "SP_s_1":real "SP_s_2":real 
+#outputs "Rho_0":real "Rho_1":real "Rho_2":real 
