@@ -4,27 +4,26 @@ const $state.name : int  = $state.idx;
 #end for 
 
 const n: int = $len($state_list); -- State Size
-const AP_size: int = 2; 
-const Phi_size: int = 3;
+const AP_size: int = $len($AP.values); 
+const Phi_size: int = $len($formulas.values);
 
 type SamplePoint         = {t : real; s : real^n};
-type PerformancePoint    = real^Phi_size;
+type PerformancePoint    = real^(Phi_size+AP_size);
 type PerformancePoint_AP = real^AP_size;
 
 
 node Main(SP: SamplePoint) returns(Rho: PerformancePoint); 
-var Rho_AP: PerformancePoint_AP;
 let 
-    Rho_AP = ComputeRho_AP(SP); 
-    Rho    = ComputeRho_Phi(Rho_AP); 
+    Rho    = ComputeRho_Phi(SP); 
 tel
 
 
-node ComputeRho_Phi(Rho_AP : PerformancePoint_AP) returns(Rho:PerformancePoint);
+node ComputeRho_Phi(SP: SamplePoint) 
+                    returns(Rho:PerformancePoint);
 let
 
     #for $prop in $AP.values()
-    Rho[$prop.idx] = Rho_AP[$prop.idx]; -- $prop.p_name: $prop.text 
+    Rho[$prop.idx] = f_${prop.idx}(SP); -- $prop.p_name: $prop.text 
     #end for
     
     #for $i, $formula in $enumerate($formulas.values()) 
@@ -34,15 +33,6 @@ let
     #end for
 
 tel
-
-
-node ComputeRho_AP(SP : SamplePoint) returns(Rho_AP:PerformancePoint_AP); 
-let
-    #for $prop in $AP.values()
-    Rho_AP[$prop.idx] = f_${prop.idx}(SP); -- $prop.p_name 
-    #end for
-tel
-
 
 -----------------------------
 -- Quantifiers for the APs --

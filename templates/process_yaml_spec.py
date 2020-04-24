@@ -43,6 +43,11 @@ class Specification(object):
                 if p_name in formula.formula:
                     formula.formula  = formula.formula.replace(p_name,
                     "Rho[{}]".format(prop.idx)) 
+            for state in self.states:
+                if state.name in formula.formula:
+                    formula.formula = formula.formula.replace(state.name, "SP.s[{}]".format(state.name))
+
+
 
     def getSearchList(self):
         return [{"state_list":self.states,"AP":self.AP,"formulas":self.formulas}]

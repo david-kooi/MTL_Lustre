@@ -67,8 +67,10 @@ tel
 
 node Previous(x:real) returns (z:real);
 let
-    z = Since_Interval<<1,1>>(x,99.0);
-    --z = delay<<1>>(x);
+    -- Works as proof of concept 
+    --z = Since_Interval<<1,1>>(x,99.0);
+
+    z = Delay<<1>>(x);
 tel
 
 node Once_Interval<<const l:int; const u:int>>(x:real) returns(z:real);
